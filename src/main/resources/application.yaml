@@ -3,12 +3,19 @@ spring:
     name: url-shortener
   profiles:
     active: dev
-
 server:
-  port: 8080
+  servlet:
+    context-path: /api/v1/shorten
+  port: 8081
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
