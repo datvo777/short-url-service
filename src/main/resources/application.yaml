@@ -3,6 +3,20 @@ spring:
     name: url-shortener
   profiles:
     active: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=shortener
+    username: postgres
+    password: admin
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # or update for local dev
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: shortener
+        format_sql: true
 server:
   servlet:
     context-path: /api/v1/shorten
