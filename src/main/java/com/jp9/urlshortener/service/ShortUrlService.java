@@ -8,10 +8,9 @@ import org.springframework.stereotype.Service;
 
 import com.jp9.urlshortener.cache.ShortUrlCache;
 import com.jp9.urlshortener.dto.CreateShortUrlResponse;
+import com.jp9.urlshortener.dto.GeneratedShortUrl;
 import com.jp9.urlshortener.entity.ShortUrlEntity;
-import com.jp9.urlshortener.model.ShortUrl;
 import com.jp9.urlshortener.repository.ShortUrlRepository;
-import com.jp9.urlshortener.util.Base62Encoder;
 
 @Service
 public class ShortUrlService {
@@ -34,19 +33,20 @@ public class ShortUrlService {
     // POST flow
     public CreateShortUrlResponse create(String originalUrl) {
 
-        String shortKey = shortKeyGenerator.generate();
+        GeneratedShortUrl generatedShortUrl = shortKeyGenerator.generate();
 
         ShortUrlEntity entity = new ShortUrlEntity();
-        entity.setShortKey(shortKey);
+        entity.setId(generatedShortUrl.getId());
+        entity.setShortKey(generatedShortUrl.getShortKey());
         entity.setOriginalUrl(originalUrl);
         entity.setCreatedAt(Instant.now());
 
         repository.save(entity);
 
         // Optional: cache warm-up
-        cache.set(shortKey, originalUrl, ttl);
+        cache.set(generatedShortUrl.getShortKey(), originalUrl, ttl);
 
-        return new CreateShortUrlResponse(shortKey);
+        return new CreateShortUrlResponse(generatedShortUrl.getShortKey());
     }
 
     public String resolve(String shortKey) throws NotFoundException {

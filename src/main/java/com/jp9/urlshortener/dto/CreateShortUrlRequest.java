@@ -9,13 +9,13 @@ public class CreateShortUrlRequest {
         regexp = "https?://.*",
         message = "URL must start with http or https"
     )
-    private String longUrl;
+    private String originalUrl;
 
-    public String getLongUrl() {
-        return longUrl;
+    public String getOriginalUrl() {
+        return originalUrl;
     }
 
-    public void setLongUrl(String longUrl) {
-        this.longUrl = longUrl;
+    public void setOriginalUrl(String longUrl) {
+        this.originalUrl = longUrl;
     }
 }

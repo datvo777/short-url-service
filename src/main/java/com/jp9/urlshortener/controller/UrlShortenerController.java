@@ -1,5 +1,8 @@
 package com.jp9.urlshortener.controller;
 
+import java.net.URI;
+
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,28 +12,37 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jp9.urlshortener.dto.CreateShortUrlRequest;
 import com.jp9.urlshortener.dto.CreateShortUrlResponse;
+import com.jp9.urlshortener.service.ShortUrlService;
 
 import jakarta.validation.Valid;
 
 @RestController
 public class UrlShortenerController {
+    private final ShortUrlService shortUrlService;
 
-    @PostMapping("/shorten")
+    public UrlShortenerController(ShortUrlService shortUrlService) {
+        this.shortUrlService = shortUrlService;
+    }
+
+    @PostMapping
     public ResponseEntity<CreateShortUrlResponse> shorten(
             @Valid @RequestBody CreateShortUrlRequest request
     ) {
-        // Phase 3: ID generation
-        // Phase 4: persistence
-        // Phase 5: caching
+        CreateShortUrlResponse shortUrl = shortUrlService.create(request.getOriginalUrl());
 
         return ResponseEntity.ok(
-                new CreateShortUrlResponse("https://short.ly/placeholder")
+                shortUrl
         );
     }
 
     @GetMapping("/{shortKey}")
-    public ResponseEntity<Void> redirect(@PathVariable String shortKey) {
-        // Phase 5: cache + redirect logic
+    public ResponseEntity<Void> redirect(@PathVariable String shortKey) throws ChangeSetPersister.NotFoundException {
+        String originalUrl = shortUrlService.resolve(shortKey);
+        if (originalUrl != null) {
+            return ResponseEntity.status(302)
+                    .location(URI.create(originalUrl))
+                    .build();
+        }
         return ResponseEntity.notFound().build();
     }
 }

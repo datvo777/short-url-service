@@ -18,6 +18,7 @@ import lombok.Setter;
 public class ShortUrlEntity {
 
     @Id
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "short_key", nullable = false, unique = true)
