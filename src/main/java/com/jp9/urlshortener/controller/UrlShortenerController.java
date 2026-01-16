@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jp9.urlshortener.dto.CreateShortUrlRequest;
@@ -17,6 +18,7 @@ import com.jp9.urlshortener.service.ShortUrlService;
 import jakarta.validation.Valid;
 
 @RestController
+@RequestMapping("/shorten")
 public class UrlShortenerController {
     private final ShortUrlService shortUrlService;
 

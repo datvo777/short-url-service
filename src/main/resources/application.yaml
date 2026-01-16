@@ -19,7 +19,7 @@ spring:
         format_sql: true
 server:
   servlet:
-    context-path: /api/v1/shorten
+    context-path: /api/v1
   port: 8081
 
 management:
