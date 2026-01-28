@@ -12,6 +12,9 @@ import com.jp9.urlshortener.dto.GeneratedShortUrl;
 import com.jp9.urlshortener.entity.ShortUrlEntity;
 import com.jp9.urlshortener.repository.ShortUrlRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ShortUrlService {
 
@@ -50,15 +53,27 @@ public class ShortUrlService {
     }
 
     public String resolve(String shortKey) throws NotFoundException {
+        long start, end;
         // Phase 5: cache
-        String url = cache.get(shortKey);
-        if (url != null) {
-            return url;
-        }
+        // start = System.nanoTime();
+        // String url = cache.get(shortKey);
+        // end = System.nanoTime();
+
+        // log.info("Cache lookup took {} ms", (end - start) / 1_000_000); // 8 ms first time, 2 ms subsequent times
+
+        // if (url != null) {
+        //     return url;
+        // }
 
         // Phase 4: DB
+        start = System.nanoTime();
+
         ShortUrlEntity shortUrl = repository.findByShortKey(shortKey)
                 .orElseThrow(NotFoundException::new);
+
+        end = System.nanoTime();
+        log.info("DB lookup took {} ms", (end - start) / 1_000_000); // 25 ms 1st time, 5 ms subsequent times
+
 
         // Phase 5: populate cache
         cache.set(shortKey, shortUrl.getOriginalUrl(), ttl);
