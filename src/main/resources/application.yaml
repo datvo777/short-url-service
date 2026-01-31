@@ -17,6 +17,7 @@ spring:
       hibernate:
         default_schema: shortener
         format_sql: true
+
 server:
   servlet:
     context-path: /api/v1
