@@ -24,6 +24,7 @@ public class ShortUrlService {
     private final Duration ttl = Duration.ofHours(24);
     private final ShortKeyGenerator shortKeyGenerator;
 
+    private final Timer resolveTimer;
     private final Timer cacheTimer;
     private final Timer dbTimer;
     private final Counter cacheHit;
@@ -40,13 +41,20 @@ public class ShortUrlService {
         this.shortKeyGenerator = shortKeyGenerator;
 
         // 🔥 Metrics are DEFINED here
+        this.resolveTimer = Timer.builder("shorturl.resolve.time")
+            .description("End-to-end short URL resolve time")
+            .publishPercentileHistogram(true)
+            .register(meterRegistry);
         this.cacheTimer = Timer.builder("shorturl.cache.time")
-                .description("Time spent reading from cache")
-                .register(meterRegistry);
+            .description("Time spent reading from cache")
+            .publishPercentileHistogram(true)   // 🔥 REQUIRED
+            .register(meterRegistry);
 
         this.dbTimer = Timer.builder("shorturl.db.time")
-                .description("Time spent querying database")
-                .register(meterRegistry);
+            .description("Time spent querying database")
+            .publishPercentileHistogram(true)   // 🔥 REQUIRED
+            .register(meterRegistry);
+
 
         this.cacheHit = Counter.builder("shorturl.cache.hit")
                 .description("Cache hit count")
@@ -76,19 +84,16 @@ public class ShortUrlService {
         return new CreateShortUrlResponse(generatedShortUrl.getShortKey());
     }
 
-    @Timed(
-        value = "shorturl.resolve.latency",
-        description = "End-to-end short URL resolve latency",
-        percentiles = {0.5, 0.95, 0.99}
-    )
-    public String resolve(String shortKey) {
+    public String resolve(String shortKey) throws NotFoundException{
+        return resolveTimer.record(() -> {
 
-        return cacheTimer.record(() -> {
-            String cached = cache.get(shortKey);
+            String cached = cacheTimer.record(() ->
+                cache.get(shortKey)
+            );
 
             if (cached != null) {
                 cacheHit.increment();
-                return cached;
+                return cached;  
             }
 
             cacheMiss.increment();
@@ -97,11 +102,10 @@ public class ShortUrlService {
                 ShortUrlEntity entity;
                 try {
                     entity = repository.findByShortKey(shortKey)
-                            .orElseThrow(() -> new NotFoundException());
-                            cache.set(shortKey, entity.getOriginalUrl(), ttl);
-                    return entity.getOriginalUrl();
+                        .orElseThrow(NotFoundException::new);
+                        cache.set(shortKey, entity.getOriginalUrl(), ttl);
+                        return entity.getOriginalUrl();
                 } catch (NotFoundException e) {
-                    
                     e.printStackTrace();
                     return null;
                 }
